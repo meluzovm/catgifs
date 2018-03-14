@@ -19,8 +19,6 @@ images = [
     "./static/images/cat-9.gif",
     "./static/images/cat-10.gif",
     "./static/images/cat-11.gif",
-    "./static/images/cat-12.gif",
-    "./static/images/cat-13.gif"
 ]
 
 @app.route('/')
