@@ -4,6 +4,6 @@ COPY requirements.txt /usr/src/app/
 RUN pip install --no-cache-dir -r /usr/src/app/requirements.txt
 COPY app.py /usr/src/app/
 COPY templates/index.html /usr/src/app/templates/
-COPY styles/main.css /usr/src/app/styles/
+COPY static/styles/main.css /usr/src/app/static/styles/
 EXPOSE 5000
 CMD ["python", "/usr/src/app/app.py"]
