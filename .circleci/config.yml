@@ -50,7 +50,7 @@ jobs:
             docker build -t catgifs-${TAG} .
             aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com
             docker tag catgifs-${TAG} ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/catgifs-${TAG}
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/catgifs-${TAG}
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/catgifs
       #- setup_remote_docker:
        #   version: 19.03.13
        #   docker_layer_caching: true
