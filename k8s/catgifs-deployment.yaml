@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catgifs
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      run: catgifs
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: catgifs
+    spec:
+      containers:
+      - name: catgifs
+        image: 827609500002.dkr.ecr.eu-central-1.amazonaws.com/catgifs:latest
+        ports:
+        - containerPort: 80
