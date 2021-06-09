@@ -52,6 +52,6 @@ workflows:
   default:
     jobs:
       - build
-      - create-docker:
+      - build-image:
           requires:
             - "build"
