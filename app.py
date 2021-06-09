@@ -1,8 +1,10 @@
-#!/usr/bin/python2.7
-
-from flask import Flask, render_template
+#!/usr/bin/python3.9
 import random
+from flask import Flask, render_template
+from sensible.loginit import logger
 
+
+log = logger(__name__)
 app = Flask(__name__)
 
 # a bunch of cat gifs
@@ -27,4 +29,7 @@ def index():
     return render_template('index.html', url=url)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    log.info("START Flask")
+    app.debug = True
+    app.run(host='0.0.0.0', port=3000)
+    log.info("SHUTDOWN Flask")
