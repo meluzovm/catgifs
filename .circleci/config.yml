@@ -29,17 +29,20 @@ jobs:
             make lint 
   build-image:
     #machine: true
-    #docker:
-    #  - image: amazon/aws-cli 
     docker:
-      - image: cimg/base:2021.05  
+      - image: amazon/aws-cli 
+    #docker:
+    #  - image: cimg/base:2021.05  
     steps:
-      #- run: yum install -y tar git docker
+      - run:
+          name: installing packeges
+          command: |
+            amazon-linux-extras enable docker
+            yum install -y tar git docker
       - checkout
-      - run: sudo apt-get update && sudo apt-get install -y awscli
+      #- run: sudo apt-get update && sudo apt-get install -y awscli
       - setup_remote_docker:
           version: 19.03.13
-          #docker_layer_caching: true
       - run:
           name: Build docker Image
           command: |
