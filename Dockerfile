@@ -1,12 +1,10 @@
-FROM python:3-alpine3.9
+FROM python:3.9-alpine
 
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r /app/requirements.txt
+WORKDIR /app
 
-COPY app.py /app/
-COPY templates/index.html /app/templates/
-COPY static/styles/main.css /app/static/styles/
-COPY static/images/* /app/static/images/
+COPY . requirements.txt /app/
+RUN pip install --no-cache-dir --upgrade pip &&\
+    pip install --no-cache-dir --trusted-host pypi.python.org -r /app/requirements.txt
 
 EXPOSE 3000
 
