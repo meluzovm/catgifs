@@ -1,4 +1,16 @@
 version: 2.1
+commands:
+  set-environment:
+    steps:
+      - run:
+          name: Set environment variable
+          command: |
+            - VERSION=0.1
+            - TAG=$VERSION-$CIRCLE_BUILD_NUM
+            - IMAGEWITHTAG=catgifs:$TAG
+            - echo "export VERSION=${VERSION}" >> $BASH_ENV
+            - echo "export TAG=${TAG}" >> $BASH_ENV
+            - echo "export IMAGEWITHTAG=${IMAGEWITHTAG}" >> $BASH_ENV
 jobs:
   build:
     docker:
@@ -34,6 +46,7 @@ jobs:
     #docker:
     #  - image: cimg/base:2021.05  
     steps:
+      - set-environment
       - run:
           name: installing packages
           command: |
@@ -43,7 +56,7 @@ jobs:
       - run:
           name: Add build number to index.html
           command: |
-            TAG=0.1.$CIRCLE_BUILD_NUM
+            #TAG=0.1.$CIRCLE_BUILD_NUM
             sed -i -e "s/buildnumber/$TAG/g" templates/index.html 
       #- run: sudo apt-get update && sudo apt-get install -y awscli
       - setup_remote_docker:
@@ -51,14 +64,29 @@ jobs:
       - run:
           name: Build docker Image
           command: |
-            TAG=0.1.$CIRCLE_BUILD_NUM
-            FULLTAG=catgifs:${TAG}
+            #TAG=0.1.$CIRCLE_BUILD_NUM
+            #IMAGEWITHTAG=catgifs:${TAG}
 
-            docker build -t ${FULLTAG} .
+            docker build -t ${IMAGEWITHTAG} .
             aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com
-            docker tag ${FULLTAG} ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${FULLTAG}
+            docker tag ${IMAGEWITHTAG} ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}
             docker image ls
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${FULLTAG} 
+            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG} 
+  update-image:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - set-environment
+      - run:
+          name:
+          command: |
+            curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mv kubectl /usr/local/bin
+            kubectl version --short --client
+            aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
+            kubectl set image deployments catgifs  catgifs=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}    
 workflows:
   default:
     jobs:
@@ -67,3 +95,6 @@ workflows:
       #    requires:
       #      - "build"
       - build-image
+      - update-image:
+          requires:
+            - "build-image"
