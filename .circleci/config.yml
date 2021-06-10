@@ -5,12 +5,12 @@ commands:
       - run:
           name: Set environment variable
           command: |
-            - VERSION=0.1
-            - TAG=$VERSION-$CIRCLE_BUILD_NUM
-            - IMAGEWITHTAG=catgifs:$TAG
-            - echo "export VERSION=${VERSION}" >> $BASH_ENV
-            - echo "export TAG=${TAG}" >> $BASH_ENV
-            - echo "export IMAGEWITHTAG=${IMAGEWITHTAG}" >> $BASH_ENV
+            VERSION=0.1
+            TAG=$VERSION-$CIRCLE_BUILD_NUM
+            IMAGEWITHTAG=catgifs:$TAG
+            echo "export VERSION=${VERSION}" >> $BASH_ENV
+            echo "export TAG=${TAG}" >> $BASH_ENV
+            echo "export IMAGEWITHTAG=${IMAGEWITHTAG}" >> $BASH_ENV
 jobs:
   build:
     docker:
