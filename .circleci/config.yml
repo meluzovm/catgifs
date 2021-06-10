@@ -87,9 +87,9 @@ jobs:
       - run: 
           name: prepare and deploy
           command: |
-            sed -i -e "s-imageid-${ECR}/${IMAGEWITHTAG}-g"       k8s/catgifs-deployment.yaml 
-            sed -i -e "s-workflowid-${CIRCLE_WORKFLOW_ID:0:7}-g" k8s/catgifs-deployment.yaml 
-            sed -i -e "s-workflowid-${CIRCLE_WORKFLOW_ID:0:7}-g" k8s/catgifs-service.yaml 
+            sed -i -e "s+imageid+${ECR}/${IMAGEWITHTAG}+g"       k8s/catgifs-deployment.yaml 
+            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-deployment.yaml 
+            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-service.yaml 
             kubectl apply -f k8s/catgifs-deployment.yaml 
             kubectl get deployments
 
@@ -118,10 +118,11 @@ jobs:
     steps:
       - checkout
       - set-environment
+      - set-kubectl
       - run:
           name:
           command: |
-            kubectl set image deployments catgifs  catgifs=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}    
+            kubectl set image deployments catgifs  catgifs=${ECR}/${IMAGEWITHTAG}    
             kubectl get pods
 
   cleanup:
@@ -130,6 +131,7 @@ jobs:
     steps:
       - checkout
       - set-environment 
+      - set-kubectl
       - run:
           name:
           command: |
