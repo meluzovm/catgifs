@@ -101,8 +101,8 @@ jobs:
       - set-environment
       - set-kubectl
       - run: kubectl port-forward deployment/catgifs-dev 8888:3000 & 
-      - run: curl localhost:8888
       - run: sleep 5
+      - run: curl localhost:8888
       - run:
           name: check url
           command: |
