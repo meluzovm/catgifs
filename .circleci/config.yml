@@ -8,9 +8,21 @@ commands:
             VERSION=0.1
             TAG=$VERSION-${CIRCLE_WORKFLOW_ID:0:7}
             IMAGEWITHTAG=catgifs:$TAG
+            ECR=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com
             echo "export VERSION=${VERSION}" >> $BASH_ENV
             echo "export TAG=${TAG}" >> $BASH_ENV
             echo "export IMAGEWITHTAG=${IMAGEWITHTAG}" >> $BASH_ENV
+            echo "export ECR=${ECR}" >> $BASH_ENV
+  set-kubectl:
+    steps:
+      - run:
+          name: Set environment variable
+          command: |
+            curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
+            chmod +x ./kubectl
+            mv kubectl /usr/local/bin
+            kubectl version --short --client
+            aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
 jobs:
   build:
     docker:
@@ -40,34 +52,66 @@ jobs:
           command: |
             make lint 
   build-image:
-    #machine: true
     docker:
       - image: amazon/aws-cli 
-    #docker:
-    #  - image: cimg/base:2021.05  
     steps:
       - set-environment
       - run:
           name: installing packages
           command: |
-            amazon-linux-extras enable docker
+            amazon-linux-extras enable docker 
             yum install -y tar git docker
       - checkout
       - run:
           name: Add build number to index.html
           command: |
             sed -i -e "s/workflowid/$TAG/g" templates/index.html 
-      #- run: sudo apt-get update && sudo apt-get install -y awscli
       - setup_remote_docker:
           version: 19.03.13
       - run:
           name: Build docker Image
           command: |
             docker build -t ${IMAGEWITHTAG} .
-            aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com
-            docker tag ${IMAGEWITHTAG} ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}
+            aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${ECR}
+            docker tag ${IMAGEWITHTAG} ${ECR}/${IMAGEWITHTAG}
             docker image ls
-            docker push ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG} 
+            docker push ${ECR}/${IMAGEWITHTAG}
+
+  deploy-image:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - set-environment
+      - set-kubectl
+      - run: 
+          name: prepare and deploy
+          command: |
+            sed -i -e "s-imageid-${ECR}/${IMAGEWITHTAG}-g"       k8s/catgifs-deployment.yaml 
+            sed -i -e "s-workflowid-${CIRCLE_WORKFLOW_ID:0:7}-g" k8s/catgifs-deployment.yaml 
+            sed -i -e "s-workflowid-${CIRCLE_WORKFLOW_ID:0:7}-g" k8s/catgifs-service.yaml 
+            kubectl apply -f k8s/catgifs-deployment.yaml 
+            kubectl get deployments
+
+  smoke-test:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - set-environment
+      - set-kubectl
+      - run: kubectl port-forward deployment/catgifs-dev 8888:3000 & 
+      - run:
+          name: check url
+          command: |
+            if curl -s localhost:8888 | grep "$TAG"
+              then
+                echo "OK"
+              else
+                echo "FAIL"            
+                return 1
+            fi
+
   update-image:
     docker:
       - image: amazon/aws-cli
@@ -77,12 +121,19 @@ jobs:
       - run:
           name:
           command: |
-            curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
-            chmod +x ./kubectl
-            mv kubectl /usr/local/bin
-            kubectl version --short --client
-            aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
             kubectl set image deployments catgifs  catgifs=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}    
+            kubectl get pods
+
+  cleanup:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - set-environment 
+      - run:
+          name:
+          command: |
+            kubectl delete deployment catgifs-dev 
 workflows:
   default:
     jobs:
@@ -91,6 +142,15 @@ workflows:
       #    requires:
       #      - "build"
       - build-image
-      - update-image:
+      - deploy-image:
           requires:
             - "build-image"
+      - smoke-test:
+          requires:
+            - "deploy-image"
+      - update-image:
+          requires:
+            - "smoke-test"
+      - cleanup:
+          requires:
+            - "update-image"         
