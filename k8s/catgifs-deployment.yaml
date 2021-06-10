@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: catgifs
+  name: catgifs-dev
   namespace: default
 spec:
   selector:
     matchLabels:
-      run: catgifs
-  replicas: 2
+      run: workflowid
+  replicas: 1
   template:
     metadata:
       labels:
-        run: catgifs
+        run: workflowid
     spec:
       containers:
-      - name: catgifs
+      - name: catgifs-dev
         image: imageid
         ports:
         - containerPort: 3000
