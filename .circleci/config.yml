@@ -6,7 +6,7 @@ commands:
           name: Set environment variable
           command: |
             VERSION=0.1
-            TAG=$VERSION-$CIRCLE_BUILD_NUM
+            TAG=$VERSION-${CIRCLE_WORKFLOW_ID:0:7}
             IMAGEWITHTAG=catgifs:$TAG
             echo "export VERSION=${VERSION}" >> $BASH_ENV
             echo "export TAG=${TAG}" >> $BASH_ENV
@@ -56,17 +56,13 @@ jobs:
       - run:
           name: Add build number to index.html
           command: |
-            #TAG=0.1.$CIRCLE_BUILD_NUM
-            sed -i -e "s/buildnumber/$TAG/g" templates/index.html 
+            sed -i -e "s/workflowid/$TAG/g" templates/index.html 
       #- run: sudo apt-get update && sudo apt-get install -y awscli
       - setup_remote_docker:
           version: 19.03.13
       - run:
           name: Build docker Image
           command: |
-            #TAG=0.1.$CIRCLE_BUILD_NUM
-            #IMAGEWITHTAG=catgifs:${TAG}
-
             docker build -t ${IMAGEWITHTAG} .
             aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com
             docker tag ${IMAGEWITHTAG} ${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}
@@ -85,9 +81,7 @@ jobs:
             chmod +x ./kubectl
             mv kubectl /usr/local/bin
             kubectl version --short --client
-            echo "aws eks:"
             aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
-            echo "kubect set image:"
             kubectl set image deployments catgifs  catgifs=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}    
 workflows:
   default:
