@@ -15,6 +15,6 @@ spec:
     spec:
       containers:
       - name: catgifs
-        image: 827609500002.dkr.ecr.eu-central-1.amazonaws.com/catgifs:latest
+        image: imageid
         ports:
-        - containerPort: 80
+        - containerPort: 3000
