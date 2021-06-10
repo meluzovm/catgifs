@@ -85,7 +85,9 @@ jobs:
             chmod +x ./kubectl
             mv kubectl /usr/local/bin
             kubectl version --short --client
+            echo "aws eks:"
             aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
+            echo "kubect set image:"
             kubectl set image deployments catgifs  catgifs=${AWS_ACCOUNT_ID}.dkr.ecr.eu-central-1.amazonaws.com/${IMAGEWITHTAG}    
 workflows:
   default:
