@@ -23,6 +23,17 @@ commands:
             mv kubectl /usr/local/bin
             kubectl version --short --client
             aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
+  delete-deployment:
+    parameters:
+      when_to_run:
+        type: string
+        default: "on_fail"
+    steps:
+      - run:
+          name: Destroy dev deployment 
+          when: << parameters.when_to_run >>
+          command: |
+            kubectl delete deployment catgifs-dev
 jobs:
   build:
     docker:
@@ -87,11 +98,13 @@ jobs:
       - run: 
           name: prepare and deploy
           command: |
-            sed -i -e "s+imageid+${ECR}/${IMAGEWITHTAG}+g"       k8s/catgifs-deployment.yaml 
-            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-deployment.yaml 
-            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-service.yaml 
-            kubectl apply -f k8s/catgifs-deployment.yaml 
+            sed -i -e "s+imageid+${ECR}/${IMAGEWITHTAG}+g"       k8s/catgifs-deployment-dev.yaml 
+            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-deployment-dev.yaml 
+            sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-service-dev.yaml 
+            kubectl apply -f k8s/catgifs-deployment-dev.yaml 
             kubectl get deployments
+      - delete-deployment:
+          when_to_run: on_fail
 
   smoke-test:
     docker:
@@ -113,6 +126,8 @@ jobs:
                 echo "FAIL"            
                 return 1
             fi
+      #- delete-deployment:
+      #    when_to_run: on_fail
 
   update-image:
     docker:
@@ -134,10 +149,9 @@ jobs:
       - checkout
       - set-environment 
       - set-kubectl
-      - run:
-          name:
-          command: |
-            kubectl delete deployment catgifs-dev 
+      - delete-deployment:
+          when_to_run: always
+
 workflows:
   default:
     jobs:
