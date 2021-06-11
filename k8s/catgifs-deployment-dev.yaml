@@ -7,11 +7,13 @@ spec:
   selector:
     matchLabels:
       run: workflowid
+      env: dev
   replicas: 1
   template:
     metadata:
       labels:
         run: workflowid
+        env: dev
     spec:
       containers:
       - name: catgifs-dev
