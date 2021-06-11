@@ -175,6 +175,9 @@ workflows:
       - deploy-image:
           requires:
             - "build-image"
+          filters:
+            branches:
+              only: [master]
       - smoke-test:
           requires:
             - "deploy-image"
