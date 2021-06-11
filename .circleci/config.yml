@@ -1,6 +1,7 @@
 version: 2.1
 commands:
   set-environment:
+    description: Prepares additional enviroment variables
     steps:
       - run:
           name: Set environment variable
@@ -14,16 +15,24 @@ commands:
             echo "export IMAGEWITHTAG=${IMAGEWITHTAG}" >> $BASH_ENV
             echo "export ECR=${ECR}" >> $BASH_ENV
   set-kubectl:
+    description: Install kubectl and connect to EKS
     steps:
       - run:
-          name: Install and setup kubectl
+          name: Install kubectl
           command: |
             curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
             chmod +x ./kubectl
             mv kubectl /usr/local/bin
+      - run:
+          name: Check kubectl
+          command: |
             kubectl version --short --client
+      - run:
+          name: Update kubectl configuration
+          command: |
             aws eks update-kubeconfig --name ${AWS_CLUSTER_NAME}
   delete-deployment:
+    description: Destroys new created deployment
     parameters:
       when_to_run:
         type: string
@@ -67,20 +76,20 @@ jobs:
       - image: amazon/aws-cli 
     steps:
       - set-environment
+      - checkout
       - run:
-          name: installing packages
+          name: Install additional packages
           command: |
             amazon-linux-extras enable docker 
             yum install -y tar git docker
-      - checkout
       - run:
-          name: Add build number to index.html
+          name: Update tag in index.html
           command: |
             sed -i -e "s/workflowid/$TAG/g" templates/index.html 
       - setup_remote_docker:
           version: 19.03.13
       - run:
-          name: Build docker Image
+          name: Build docker image
           command: |
             docker build -t ${IMAGEWITHTAG} .
             aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin ${ECR}
@@ -96,11 +105,14 @@ jobs:
       - set-environment
       - set-kubectl
       - run: 
-          name: prepare and deploy
+          name: Prepare configuration files
           command: |
             sed -i -e "s+imageid+${ECR}/${IMAGEWITHTAG}+g"       k8s/catgifs-deployment-dev.yaml 
             sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-deployment-dev.yaml 
             sed -i -e "s+workflowid+${CIRCLE_WORKFLOW_ID:0:7}+g" k8s/catgifs-service-dev.yaml 
+      - run: 
+          name: Create new deployment
+          command: |
             kubectl apply -f k8s/catgifs-deployment-dev.yaml 
             kubectl get deployments
       - delete-deployment:
@@ -113,17 +125,13 @@ jobs:
       - checkout
       - set-environment
       - set-kubectl
-      #- run: kubectl port-forward deployment/catgifs-dev 8888:3000 & 
-      - run: sleep 10
-      - run: curl ${AWS_ELB_DEV_URL}:80
       - run:
-          name: check url
+          name: Wait 10 seconds
           command: |
-            echo "-------------------""
-            echo "debugging:"
-            echo "$TAG"
-            echo ${AWS_ELB_DEV_URL}:80
-            echo "-------------------""
+            sleep 10
+      - run:
+          name: Check new deployment
+          command: |
             if curl -s ${AWS_ELB_DEV_URL}:80 | grep -i -e "${TAG}"
               then
                 echo "OK"
@@ -131,8 +139,8 @@ jobs:
                 echo "FAIL"            
                 return 1
             fi
-      #- delete-deployment:
-      #    when_to_run: on_fail
+      - delete-deployment:
+          when_to_run: on_fail
 
   update-image:
     docker:
@@ -142,9 +150,9 @@ jobs:
       - set-environment
       - set-kubectl
       - run:
-          name:
+          name: Replace image on Production 
           command: |
-            kubectl set image deployments catgifs  catgifs=${ECR}/${IMAGEWITHTAG}    
+            kubectl set image deployments catgifs-prod  catgifs-prod=${ECR}/${IMAGEWITHTAG}    
             kubectl get pods
 
   cleanup:
@@ -160,11 +168,10 @@ jobs:
 workflows:
   default:
     jobs:
-      #- build
-     #- build-image:
-      #    requires:
-      #      - "build"
-      - build-image
+      - build
+      - build-image:
+          requires:
+            - "build"
       - deploy-image:
           requires:
             - "build-image"
