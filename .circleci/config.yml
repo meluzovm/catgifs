@@ -100,13 +100,13 @@ jobs:
       - checkout
       - set-environment
       - set-kubectl
-      - run: kubectl port-forward deployment/catgifs-dev 8888:3000 & 
-      - run: sleep 30
-      - run: curl localhost:8888
+      #- run: kubectl port-forward deployment/catgifs-dev 8888:3000 & 
+      - run: sleep 10
+      - run: curl ${AWS_ELB_DEV_URL}:80
       - run:
           name: check url
           command: |
-            if curl -s localhost:8888 | grep "$TAG"
+            if curl -s ${AWS_ELB_DEV_URL}:80 | grep "$TAG"
               then
                 echo "OK"
               else
