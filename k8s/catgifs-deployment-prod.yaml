@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catgifs-prod
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      run: catgifs-prod
+      env: prod
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: catgifs-prod
+        env: prod
+    spec:
+      containers:
+      - name: catgifs-prod
+        image: image
+        ports:
+        - containerPort: 3000
