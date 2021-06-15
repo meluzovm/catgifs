@@ -13,42 +13,42 @@ This project shows the skills and knowledge which were developed throughout the 
 * Building Kubernetes clusters
 
 ## About application
-![catgifs](screenshot.png)
-This is a Docker-contained Flask web app that displays random cat gifs (forked from https://github.com/eightlimbed/catgifs )
+This is a Docker-contained Flask web app that displays random cat gifs (forked from https://github.com/eightlimbed/catgifs )  
+![catgifs](screenshot.png)  
 
 ## Structure of Repository: 
-.
-├── Dockerfile
-├── Makefile
-├── README.md
-├── app.py
-├── ekstcl.md
-├── json.json
-├── k8s
-│   ├── catgifs-deployment-dev.yaml
-│   ├── catgifs-deployment-prod.yaml
-│   ├── catgifs-service-dev.yaml
-│   └── catgifs-service-prod.yaml
-├── requirements.txt
-├── screenshot.png
-├── static
-│   ├── images
-│   │   ├── cat-0.gif
-│   │   ├── cat-1.gif
-│   │   ├── cat-10.gif
-│   │   ├── cat-11.gif
-│   │   ├── cat-2.gif
-│   │   ├── cat-3.gif
-│   │   ├── cat-4.gif
-│   │   ├── cat-5.gif
-│   │   ├── cat-6.gif
-│   │   ├── cat-7.gif
-│   │   ├── cat-8.gif
-│   │   └── cat-9.gif
-│   └── styles
-│       └── main.css
-└── templates
-    └── index.html
+.  
+├── Dockerfile  
+├── Makefile  
+├── README.md  
+├── app.py  
+├── ekstcl.md  
+├── json.json  
+├── k8s  
+│   ├── catgifs-deployment-dev.yaml  
+│   ├── catgifs-deployment-prod.yaml  
+│   ├── catgifs-service-dev.yaml  
+│   └── catgifs-service-prod.yaml  
+├── requirements.txt  
+├── screenshot.png  
+├── static  
+│   ├── images  
+│   │   ├── cat-0.gif  
+│   │   ├── cat-1.gif  
+│   │   ├── cat-10.gif  
+│   │   ├── cat-11.gif  
+│   │   ├── cat-2.gif  
+│   │   ├── cat-3.gif  
+│   │   ├── cat-4.gif  
+│   │   ├── cat-5.gif  
+│   │   ├── cat-6.gif  
+│   │   ├── cat-7.gif  
+│   │   ├── cat-8.gif  
+│   │   └── cat-9.gif  
+│   └── styles  
+│       └── main.css  
+└── templates  
+    └── index.html  
 
 
 ## Usage
