@@ -22,6 +22,7 @@ This is a Docker-contained Flask web app that displays random cat gifs (forked f
 ├── Makefile
 ├── README.md
 ├── app.py
+├── ekstcl.md
 ├── json.json
 ├── k8s
 │   ├── catgifs-deployment-dev.yaml
@@ -54,3 +55,18 @@ This is a Docker-contained Flask web app that displays random cat gifs (forked f
 docker build -t TAG .
 kubectl -f apply catgifs-deployment-dev.yaml
 kubectl -f apply catgifs-service-dev.yaml
+
+## Using eksctl for creation of cluster 
+Described in ./ekstctl.md 
+
+## Screenshots:
+* 01. Fail at Lint Step  
+    <img src="screenshots/screenshot01.png" width="250"/>
+* 02. Success at Lint Step  
+    <img src="screenshots/screenshot02.png" width="250"/>
+* 03. Application before deployment  
+    <img src="screenshots/screenshot03.png" width="250"/>
+* 04. Application after deployment  
+    <img src="screenshots/screenshot04.png" width="250"/>
+* 05. The full pipeline  
+    <img src="screenshots/screenshot05.png" width="250"/>
